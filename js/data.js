@@ -126,3 +126,39 @@ var albumInfoArr=[
 		]
 	}
 ]
+
+var lyricData="\
+Remember we'd be up all night\n\
+Talking 'til the morning light, yeah\n\
+Like the way it used to be\n\
+Those simple days\n\
+Just you and me, mmmm\n\
+\n\
+I see you  baby I know\n\
+What's on your mind\n\
+Cuz you look like you've\n\
+Got something to say, yeah\n\
+\n\
+I may not say those words anymore\n\
+But maybe it just ain't my way\n\
+\n\
+You ask me do I love you but\n\
+Do you remember\n\
+Why I walked on water for you\n\
+Do you remember\n\
+My first steps on the moon\n\
+Have you ever wondered why\n\
+I gave three wishes to you\n\
+You asked a question\n\
+But the answer lies\n\
+In you, in you\n\
+The answer lies in you\n\
+\n\
+Remember we used to laugh and say\n\
+No one understood our way\n\
+And there were times\n\
+When you would cry\n\
+while knocking\n\
+On my door\n\
+I was there\n\
+To shelter your pain, oh"

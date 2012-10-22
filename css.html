@@ -1,0 +1,53 @@
+<html>
+<head>
+<title></title>
+<style type="text/css">
+.playBtn{
+	width:80px;
+	height:80px;
+	position: relative;
+	border-radius:50px;
+	border:10px solid rgba(0,0,0,0.2);
+	box-shadow:0 0 10px #000,inset 0 0 10px #000;
+}
+.playBtn:before{
+	position:absolute;
+	top:-6px;
+	left:15px;
+	content:"►";
+	font-size:66px;
+	color:#ccc;
+	text-shadow:0 0 10px #000;
+	-webkit-transform:scale(1,2.2);
+}
+.playBtn.play:before{
+	position:absolute;
+	top:0px;
+	left:-20px;
+	content:"▌▌";
+	line-height:80px;
+	color:#ccc;
+	text-shadow:0 0 20px #000;
+	-webkit-transform:scale(0.4,0.7);
+}
+.cover{
+	width:200px;
+	height:200px;
+	background:#ccc;
+}
+.cover:before{
+	font-size:66px;
+	content:"♪";
+	color:#ccc;
+	text-shadow:0 0 10px #000;
+}
+</style>
+</head>
+<body>
+<div class="playBtn"></div>
+
+<div class="playBtn play"></div>
+
+<div class="cover"></div>
+</body>
+</html>

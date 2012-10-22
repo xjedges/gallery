@@ -1,0 +1,76 @@
+<html>
+<head>
+	<title></title>
+<script type="text/javascript" src="js/debug3.0.js"></script>
+<script type="text/javascript" src="js/$.js"></script>
+<script type="text/javascript">
+debug(function(){
+
+// var div=$("div",{cls:"playBtn play Btnplay"})
+// $("body").append(div)
+// DD("playBtn play Btnplay".match(new RegExp('(\s|^)'+"play"+'(\s|)')))
+// DD(div.addClass("play"))
+// DD(div.removeClass("play"))
+// DD(div.attr("class"))
+// DD(div.addClass("play"))
+// DD(div.attr("class"))
+// DD(div.getAttribute("class"))
+
+
+
+var time={}
+var endTime="2:11:33"
+endTime.replace(/([\d]*)\:([\d]*)\:([\d]*)/,function(){
+	time.display=arguments[0]
+	time.hour=parseInt(arguments[1])
+	time.minute=parseInt(arguments[2])
+	time.second=parseInt(arguments[3])
+	time.frame=time.hour*3600+time.minute*60+time.second
+})
+for(var i in time){
+	DD(i,time[i])
+}
+
+var frames=timeFormat("10:10:03")
+D(frames)
+D(timeFormat(frames))
+
+
+function timeFormat(time){
+	if(typeof(time)=="string"){
+		var timeArr=time.split(":")
+		var frames=0
+		var len=timeArr.length
+		for(var i=len;i>0;i--){
+			var value=parseInt(timeArr[i-1])
+			if(i>len-3){
+				frames+=value*Math.pow(60,len-i)
+			}
+		}
+		return frames
+	}else if(typeof(time)=="number"){
+		var second=time%60
+		var minute=(time-second)/60%60
+		var hour=(time-second-minute*60)/3600
+		return	(hour
+					?hour+":"
+					:""
+				)+
+				(hour
+					?(minute<10?"0"+minute:minute)+":"
+					:minute
+				)+
+				((hour||minute)
+					?(second<10?"0"+second:second)
+					:second
+				)
+	}
+}
+
+})
+</script>
+</head>
+<body>
+
+</body>
+</html>

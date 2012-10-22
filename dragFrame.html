@@ -1,0 +1,50 @@
+<html>
+<head>
+<title>drag frame</title>
+<script type="text/javascript" src="js/debug3.0.js"></script>
+<script type="text/javascript" src="js/$.js"></script>
+<script type="text/javascript" src="js/JClass.js"></script>
+<script type="text/javascript" src="js/drag_custom.js"></script>
+<style type="text/css">
+*{margin:0; padding:0;}
+.wrap{width:500px; height:300px; margin:0 auto; position:relative; background:#000;}
+.topFrame{height:100px; position:absolute; width:100%; background:#F00;display:table;}
+.drag{top:100px;position:absolute; width:100%; height:20px; background:#0F0;}
+.bottomFrame{height:180px;position:absolute; width:100%; background:#00F; bottom:0;}
+.center{display:table-cell;vertical-align:middle;}
+.content{width:50px;height:50px; margin:0 auto; background:#0FF;}
+</style>
+<script type="text/javascript">
+debug(function(){
+var wrap=$("div",{cls:"wrap"})
+var center=$("div",{cls:"center"})
+var content=$("div",{cls:"content"})
+var topFrame=$("div",{cls:"topFrame"})
+var bottomFrame=$("div",{cls:"bottomFrame"})
+var drag=$("div",{cls:"drag"})
+topFrame.append(center)
+center.append(content)
+wrap.append(topFrame,drag,bottomFrame)
+$("body").append(wrap)
+
+new Drag(drag,{
+	activeY:true,
+	limit:{obj:wrap,magnet:0},
+	move:function(){
+		topFrame.css({height:this.posY})
+		bottomFrame.css({height:280-this.posY})
+	},
+	stop:function(){
+		topFrame.css({height:this.posY})
+		bottomFrame.css({height:280-this.posY})
+	}
+})
+
+
+})
+</script>
+</head>
+<body>
+
+</body>
+</html>

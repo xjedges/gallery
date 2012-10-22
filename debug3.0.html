@@ -1,0 +1,193 @@
+<html>
+<head>
+<title>debug3.0</title>
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+<script type="text/javascript" src="js/debug3.0.js"></script>
+<script type="text/javascript" src="js/browser.js"></script>
+<script type="text/javascript" src="js/$.js"></script>
+<script type="text/javascript">
+debug(function(){
+/*
+Browser()
+D(isBrowser("ff"))
+D(isBrowser("ie||gc"))
+D(isBrowser("gc"))
+
+var adder=function(num){
+	return function(y){
+		return num+y
+	}
+}
+var inc=adder(1);
+var dec=adder(-1);
+
+D(inc(99))
+D(dec(101))
+D(adder(100)(2))
+D(adder(2)(100))
+
+
+function add(x, y) {
+    if(x != null && y != null) return x + y; // 如果x,y都不为null.则返回x + y;
+    else if(x != null && y == null) {
+        return function(y) {
+            return x + y;
+        }
+    }else if(x == null && y != null){
+        return function(x) {
+            return x + y;
+        }
+    }
+}
+*/
+
+//===========================
+//====== Common Curring =====
+//===========================
+function Curring(func) {
+    return function() {
+        var args = Array.prototype.slice.call(arguments, 0);
+        if(args.length < func.length){ // 如果形参小于实参参数
+            return function(){
+                var _args = args.concat(Array.prototype.slice.call(arguments, 0));  // 取得参数
+                return Curring(func).apply(this, _args);   // 然后递归调用函数,获取所有参数
+            }
+        }else {
+            return func.apply(this, args);
+        }
+    }
+}
+
+//==== the Common function ====
+function f(x, y, z) {
+    D([x, y, z])
+}
+var cuf = Curring(f);
+cuf(2, 3, 4);
+cuf(2, 3)(4);
+cuf(2)(3)(4);
+
+
+D("add(3, 4) == " + add(3, 4));
+D("add(3)(4) == " + add(3)(4));
+
+
+
+var worker=new Worker('worker.js')
+worker.onmessage=function(event){
+	DD(event.data)
+}
+worker.postMessage("1")
+
+/*
+var wait = function(callbacks, done) {
+	DD('wait start');
+	var counter = callbacks.length;
+	var results = [];
+	var next = function(result) {//接收函數執行結果，並判斷是否結束執行
+		results.push(result);
+		if(--counter == 0) {
+			done(results);//如果結束執行，就把所有執行結果傳給指定的callback處理
+		}
+	};
+	for(var i = 0; i < callbacks.length; i++) {//依次呼叫所有要執行的函數
+		callbacks[i](next);
+	}
+	DD('wait end');
+}
+
+wait([
+		function(next){
+			setTimeout(function(){
+				DD('done a');
+				var result = 500;
+				next(result)
+			},500);
+		},
+		function(next){
+			setTimeout(function(){
+				DD('done b');
+				var result = 1000;
+				next(result)
+			},1000);
+		},
+		function(next){
+			setTimeout(function(){
+				DD('done c');
+				var result = 1500;
+				next(result)
+		},1500);
+	}],
+	function(results){
+		var ret = 0, i=0;
+		for(; i<results.length; i++) {
+			ret += results[i];
+		}
+		DD('done all. result: '+ret);
+	}
+);
+
+
+
+function Wait(fns, done) {
+    var count = 0;
+    var results = [];
+    this.getCallback = function(index) {
+        count++;
+        return (function(waitback) {
+            return function() {
+                var i=0,args=[];
+                for(;i<arguments.length;i++) {
+                    args.push(arguments[i]);
+                }
+                args.push(waitback);
+                fns[index].apply(this, args);
+            };
+        })(function(result) {
+            results.push(result);
+            if(--count == 0) {
+                done(results);
+            }
+        });
+    }
+}
+var a = new Wait([
+	function(waitback){
+		console.log('done a');
+		var result = 500;
+		waitback(result)
+	},
+	function(waitback){
+		console.log('done b');
+		var result = 1000;
+		waitback(result)
+	},
+	function(waitback){
+		console.log('done c');
+		var result = 1500;
+		waitback(result)
+	}],
+	function(results){
+		var ret = 0, i=0;
+		for(; i<results.length; i++) {
+			ret += results[i];
+		}
+		console.log('done all. result: '+ret);
+	}
+);
+var callbacks = [a.getCallback(0),a.getCallback(1),a.getCallback(0),a.getCallback(2)];
+//一次取出要使用的callbacks，避免結果提早送出
+setTimeout(callbacks[0], 500);
+setTimeout(callbacks[1], 1000);
+setTimeout(callbacks[2], 1500);
+setTimeout(callbacks[3], 2000);
+//當所有取出的callbacks執行完畢，就呼叫done()來處理結果
+*/
+
+})
+</script>
+</head>
+<body>
+
+</body>
+</html>

@@ -1,106 +1,130 @@
-debug()
 window.onload=function(){
-	function getNav(){
-		var sUA=navigator.userAgent;
-	    if ((navigator.appName == "Microsoft Internet Explorer")) {
-	        if (sUA.indexOf('Opera')!=-1) {return 'Opera';}
-			return 'IE';
-	    }
-	    if(sUA.indexOf('Gecko')!=-1) {
-	        if(navigator.vendor=="Mozilla") {return "Gecko";}
-	        if (sUA.indexOf('Firefox')!=-1) {return 'Gecko';}
-	    }
-	    if(sUA.indexOf('Netscape')!=-1) {return 'Netscape';}
-	    if(sUA.indexOf('WebKit') != -1) {return 'WebKit';}
-	};
 	var nav=getNav()
-	var css3={
-		transform:"",
-		linearGradient:"",
-	}
-	var transform
-	if (nav=="Gecko"){
-		css3={
-			transform:"MozTransform",
-			linearGradient:"-moz-linear-gradient",
-		}
-	}
-	else if(nav=="WebKit"){
-		css3={
-			transform:"-webkit-transform",
-			linearGradient:"-webkit-linear-gradient",
-		}
-	}
-
+	var css3=	(nav=="Gecko") && {transform:"MozTransform",linearGradient:"-moz-linear-gradient"} ||
+				(nav=="WebKit") && {transform:"-webkit-transform",linearGradient:"-webkit-linear-gradient"}
+	
+	var curIndex=0
+	var playIndex=0
 	var body=$("body")
-	var gallery=Gallery()
-	gallery.switchAlbum(Math.floor((albumInfoArr.length-1)/2))
+	var wrap=$("div",{cls:"wrap"})
+	var gallery=Gallery().css({height:300})
 	var playBox=PlayBox()
-	body.append(gallery,playBox)
-	//musicBox.play()
+	var lyricBox=LyricBox().css({height:560-300})
+	body.append(
+		wrap.append(
+			gallery,
+			playBox,
+			lyricBox
+		)
+	)
+	
+	gallery.switchAlbum(Math.floor((albumInfoArr.length-1)/2))
+
+	playBox.initEvent()
+	lyricBox.initEvent()
+
+	playBox.play()
+
+
 	function Gallery(){
 		var self=$("div",{cls:"gallery"})
-
+		var layer3d=$("div",{cls:"layer3d"})
+		var center=$("div",{cls:"center"})
 		var coverFlow=CoverFlow()
 		var album=Album()
+		self.append(
+			center.append(
+				layer3d.append(
+					coverFlow,
+					album
+				)
+			)
+		);
 
-		curIndex=0
-		self.append(coverFlow,album)
-		
+		var insideAlbum=false
+		var lock=false
+		var scrollFunc=function(e){
+		    e=e || window.event; 
+			if(e.wheelDelta && !lock){//webkit
+				lock=true
+				setTimeout(function(){lock=false},1)
+		        gallery.switchAlbum(curIndex-e.wheelDelta/120)
+		    }else if(e.detail){//gecko
+		        gallery.switchAlbum(curIndex+e.detail)
+		    } 
+		}
+		self.addEventListener("mouseover",function(){
+			document.addEventListener('DOMMouseScroll',scrollFunc,false);//gecko
+			window.onmousewheel=document.onmousewheel=scrollFunc;//webkit
+		})
+		self.addEventListener("mouseout",function(){
+			document.removeEventListener('DOMMouseScroll',scrollFunc,false); 
+			window.onmousewheel=document.onmousewheel=function(){};
+		})
+
 		self.switchAlbum=function(index){
-			coverFlow.switch(index)
-			album.show(albumInfoArr[index])
-			album.unturn()
+			if(!insideAlbum && index>=0 && index<albumInfoArr.length){
+				coverFlow.switch(index)
+				album.show(albumInfoArr[index])
+				album.unturn()
+			}
 		}
 		self.insideAlbum=function(){
+			insideAlbum=true
 			album.turn(albumInfoArr[curIndex])
 			coverFlow.turn()
 		}
 		self.outsideAlbum=function(){
+			insideAlbum=false
 			album.unturn()
 			coverFlow.unturn()
+		}
+		self.updateZAlbum=function(z){
+			var style={}
+			style[css3.transform]="scale("+z+")";
+			layer3d.css(style)
 		}
 		return self
 	}
 	function CoverFlow(){
 		var self=$("ul",{cls:"coverFlow"})
 		var extra=5
+		var z=-200;
 		for(i in albumInfoArr){
 			var albumInfo=albumInfoArr[i]
 			var cover=Cover(i,albumInfo.cover)
 			self.append(cover)
 		}
 		self.turn=function(){
-			self.getChildren(curIndex).turn()
+			self.children[curIndex].turn()
 		}
 		self.unturn=function(){
-			self.getChildren(curIndex).unturn()
+			self.children[curIndex].unturn()
 		}
 		self.switch=function(index){
 			var index=parseInt(index)
 			if(curIndex==index){return false}
-			self.getChildren(curIndex).untrigger()
+			self.children[curIndex].untrigger()
 			curIndex=index
-			self.getChildren(curIndex).trigger()
-			for(i in self.getChildren()){
+			self.children[curIndex].trigger()
+			self.each(function(i){
 				var style={}
-				var obj=self.getChildren(i)
-				if(i<index-extra){
-					if(!obj.freeze){obj.freeze=true;style[css3.transform]="translateX(-"+((extra+1)*50+50)+"px) translateZ(-200px) rotateY(45deg)"}
+				if(i<curIndex-extra){
+					if(!this.freeze){this.freeze=true;style[css3.transform]="translateX(-"+((extra+1)*50+50)+"px) translateZ(-150px) rotateY(45deg)"}
 				}
-				else if(i>index+extra){
-					if(!obj.freeze){obj.freeze=true;style[css3.transform]="translateX("+((extra+1)*50+50)+"px) translateZ(-200px) rotateY(-45deg)"}
+				else if(i>curIndex+extra){
+					if(!this.freeze){this.freeze=true;style[css3.transform]="translateX("+((extra+1)*50+50)+"px) translateZ(-150px) rotateY(-45deg)"}
 				}
 				else{
-					obj.freeze=false;
-					if(i==index)		{	style[css3.transform]="translateX(0) translateZ(0) rotateY(0)"}
-					else if(i==index-1)	{	style[css3.transform]="translateX(-"+120+"px) translateZ(-150px) rotateY(70deg)"}
-					else if(i==index+1)	{	style[css3.transform]="translateX("+120+"px) translateZ(-150px) rotateY(-70deg)"}
-					else if(i<index)	{	style[css3.transform]="translateX(-"+((index-i)*50+50)+"px) translateZ(-200px) rotateY(45deg)"}
-					else if(i>index)	{	style[css3.transform]="translateX("+((i-index)*50+50)+"px) translateZ(-200px) rotateY(-45deg)"}
+					this.freeze=false;
+					if(i==curIndex)			{	style[css3.transform]="translateX(0) translateZ(0px) rotateY(0)";}
+					else if(i==curIndex-1)	{	style[css3.transform]="translateX(-"+120+"px) translateZ(-100px) rotateY(70deg)"}
+					else if(i==curIndex+1)	{	style[css3.transform]="translateX("+120+"px) translateZ(-100px) rotateY(-70deg)"}
+					else if(i<curIndex)		{	style[css3.transform]="translateX(-"+((curIndex-i)*50+50)+"px) translateZ(-150px) rotateY(45deg)"}
+					else if(i>curIndex)		{	style[css3.transform]="translateX("+((i-curIndex)*50+50)+"px) translateZ(-150px) rotateY(-45deg)"}
 				}
-				self.getChildren(i).css(style)
-			}
+				this.css(style)
+			})
 		}
 		return self
 	}
@@ -126,7 +150,7 @@ window.onload=function(){
 			if(turnState){self.unturn()}
 		}
 		self.css({backgroundImage:"url(images/"+coverLink+")"})
-		reflectCover.css({backgroundImage:css3.linearGradient+"(top,rgba(0,0,0,1) 50%,rgba(0,0,0,0.4) 100%),url(images/"+coverLink+")"})
+		reflectCover.css({backgroundImage:css3.linearGradient+"(top,rgba(30,30,30,1) 40%,rgba(30,30,30,0.4) 100%),url(images/"+coverLink+")"})
 		self.append(reflectCover)
 		return self
 	}
@@ -134,13 +158,17 @@ window.onload=function(){
 		var self=$("div",{cls:"album"})
 		var title=$("div",{cls:"title"})
 		var singer=$("div",{cls:"singer"})
+		var player=$("div",{cls:"player"})
 		var songList=$("ol",{cls:"songList"})
 		var listState=false
 		var turnState=false
-		var miniPlayBox=MiniPlayBox()
-
-		self.append(title,singer,songList,miniPlayBox)
-		songList.click(function(){
+		self.append(
+			title,
+			singer,
+			player.append(
+				songList)
+		)
+		player.click(function(){
 			if(!turnState){
 				gallery.insideAlbum()
 			}else{
@@ -156,11 +184,11 @@ window.onload=function(){
 			if(!listState){
 				self.update(info)
 			}
-			songList.addClass("turn")
+			player.addClass("turn")
 		}
 		self.unturn=function(){
 			turnState=false
-			songList.removeClass("turn")
+			player.removeClass("turn")
 			listState=false
 		}
 		self.update=function(info){
@@ -173,7 +201,7 @@ window.onload=function(){
 		}
 		self.play=function(title,musicSrc){
 			if(turnState){
-				miniPlayBox.play(title,musicSrc)
+				playBox.play(title,musicSrc)
 			}
 		}
 		return self
@@ -182,50 +210,137 @@ window.onload=function(){
 		var self=$("li",{cls:"song",text:title})
 		var musicSrc="audio/Summertrain.mp3"
 		self.click(function(){
-			self.getParent().getParent().play(title,musicSrc)
+			self.parent(3).play(title,musicSrc)
 		})
-		return self
-	}
-	function MiniPlayBox(){
-		var self=$("div",{cls:"miniPlayBox"})
-		var playBtn=$("div",{cls:"playBtn"})
-		var musicTitle=$("div",{cls:"musicTitle"})
-		var playing=false
-		self.append(musicTitle,playBtn)
-		playBtn.click(function(){
-			if(playing){self.pause()}
-			else{self.pause()}
-		})
-		self.play=function(title,musicSrc){
-			playing=true
-			playBtn.addClass("playing")
-			musicTitle.html(title)
-		}
-		self.pause=function(){
-			playing=false
-			playBtn.removeClass("playing")
-		}
 		return self
 	}
 	function PlayBox(){
-		var self=$("div",{id:"playBox"})
-		var audioInfo=$("span",{cls:"audioInfo"})
+		var self=$("div",{cls:"playBox"})
+		var audioInfo=$("p",{cls:"audioInfo",text:"song title"})
 		var media=new Audio()
-
-		var playBtn=$("div",{cls:"playBtn"})
-
-		var process=$("div",{cls:"process"})
-		var processBar=$("div",{cls:"processBar"})
-		processBar.append(process)
-
-		var timeProcess=$("span",{cls:"timeProcess",text:"00:00"})
-		var timeEnd=$("span",{cls:"timeEnd",text:"00:00"})
-
-		var mediaInfo=$("div",{cls:"mediaInfo"})
-		mediaInfo.append(timeProcess,timeEnd,processBar)
-
-		self.append(audioInfo,mediaInfo)
 		var curMedia=null
+		var time="1:1:20"
+		var frames=getTimeFrames(time)
+		// MoveHandle
+		var moveHandle1=$("div",{cls:"moveHandle1"})
+		var moveHandle2=$("div",{cls:"moveHandle2"})
+		// PlayBtn
+		var playBtn=$("div",{cls:"playBtn"})
+		// Time Process
+		var timeDurtion=$("span",{cls:"timeDurtion",text:"0"})
+		var timeEnd=$("span",{cls:"timeEnd",text:setTimeFormat(time)})
+		var timeProcess=$("div",{cls:"process"})
+		var timeProcessKey=$("div",{cls:"processKey"})
+		var timeProcessInfo=$("div",{cls:"processInfo"})
+		var timeBar=$("div",{cls:"timeBar"})
+		// Volume Process
+		var volume=$("div",{cls:"volumeBtn"})
+		var volumeProcess=$("div",{cls:"process"})
+		var volumeProcessKey=$("div",{cls:"processKey"})
+		var volumeProcessInfo=$("div",{cls:"processInfo"})
+		var volumeBar=$("div",{cls:"volumeBar"})
+		self.append(
+			playBtn,
+			moveHandle1,
+			moveHandle2,
+			audioInfo,
+			timeBar.append(
+				timeProcess,
+				timeProcessKey.append(
+					timeProcessInfo),
+				timeDurtion,
+				timeEnd
+			),
+			volume.append(
+				volumeBar.append(
+					volumeProcess,
+					volumeProcessKey.append(
+						volumeProcessInfo)
+				)
+			)
+		)
+		volumeState=false
+		volume.click(function(){
+			if(volumeState){volumeBar.css({display:"none"}); volumeState=false}
+			else{volumeBar.css({display:"block"}); volumeState=true}
+		})
+		self.initEvent=function(){
+			new Drag(timeProcessKey,{
+				activeX:true,
+				limit:{obj:timeBar,magnet:10},
+				start:function(){
+					timeProcessInfo.css({display:"none"})
+				},
+				move:function(){
+					timeProcess.css({width:this.posX+8})
+					timeProcessInfo.html(this.ratio()+"%")
+					timeProcessInfo.css({display:"block"})
+					timeDurtion.html(setTimeFormat(Math.round(this.ratio()*frames/100)))
+				},
+				stop:function(){
+					timeProcess.css({width:this.posX+8})
+					timeProcessInfo.css({display:"none"})
+					timeDurtion.html(setTimeFormat(Math.round(this.ratio()*frames/100)))
+				}
+			})
+			new Drag(volumeProcessKey,{
+				activeY:true,
+				limit:{obj:volumeBar,magnet:10},
+				start:function(){
+					volumeProcessInfo.css({display:"none"})
+				},
+				move:function(){
+					volumeProcess.css({height:100-(this.posY+8)})
+					volumeProcessInfo.html(100-this.ratio())
+					volumeProcessInfo.css({display:"block"})
+				},
+				stop:function(){
+					volumeProcess.css({height:100-(this.posY+8)})
+					volumeProcessInfo.css({display:"none"})
+				}
+			})
+			volumeBar.css({display:"none"})
+			new Drag(self,{
+				activeY:true,handle:moveHandle1,
+				limit:{obj:wrap,magnet:160},
+				move:function(){
+					gallery.css({height:this.posY+20})
+					lyricBox.css({height:560-this.posY})
+					var scale=this.posY/300
+					if(scale<0.5){gallery.css({opacity:0})}
+					else if(scale>1.5){lyricBox.css({opacity:0})}
+					else{gallery.css({opacity:1});lyricBox.css({opacity:1});gallery.updateZAlbum(scale)}
+				},
+				stop:function(){
+					gallery.css({height:this.posY+20})
+					lyricBox.css({height:560-this.posY})
+					var scale=this.posY/300
+					if(scale<0.5){gallery.css({opacity:0})}
+					else if(scale>1.5){lyricBox.css({opacity:0})}
+					else{gallery.css({opacity:1});lyricBox.css({opacity:1});gallery.updateZAlbum(scale)}
+				}
+			})
+			new Drag(self,{
+				activeY:true,handle:moveHandle2,
+				limit:{obj:wrap,magnet:160},
+				move:function(){
+					gallery.css({height:this.posY+20})
+					lyricBox.css({height:560-this.posY})
+					var scale=this.posY/300
+					if(scale<0.5){gallery.css({opacity:0})}
+					else if(scale>1.5){lyricBox.css({opacity:0})}
+					else{gallery.css({opacity:1});lyricBox.css({opacity:1});gallery.updateZAlbum(scale)}
+				},
+				stop:function(){
+					gallery.css({height:this.posY+20})
+					lyricBox.css({height:560-this.posY})
+					var scale=this.posY/300
+					if(scale<0.5){gallery.css({opacity:0})}
+					else if(scale>1.5){lyricBox.css({opacity:0})}
+					else{gallery.css({opacity:1});lyricBox.css({opacity:1});gallery.updateZAlbum(scale)}
+				}
+			})
+		}
 		self.play=function(){
 			curMedia={name:"Summertrain",src:"audio/Summertrain.mp3"}
 			media.src=curMedia.src 
@@ -241,12 +356,35 @@ window.onload=function(){
 	    self.playing=function(){
 	        audioInfo.html("playing "+curMedia.name);
 	    } 
-	    self.pausePaly=function(){
+	    self.pausePlay=function(){
 	        audioInfo.html("pause "+curMedia.name);
 	    }
 	    self.loadError=function(){
 	        audioInfo.html("load "+curMedia.name+" error");
 	    }
+		return self
+	}
+	function LyricBox(){
+		var self=$("div",{cls:"lyricBox"})
+		var lyric=$("ul",{cls:"lyric"})
+		var lyricStream=lyricData.split("\n")
+		for(var i in lyricStream){
+			var line=$("li",{cls:"line",text:lyricStream[i]})
+			lyric.append(line)
+		}
+		self.append(lyric)
+		self.initEvent=function(){
+			new Drag(lyric,{
+				activeY:true,
+				limit:{obj:self},
+				start:function(){
+				},
+				move:function(){
+				},
+				stop:function(){
+				}
+			})
+		}
 		return self
 	}
 

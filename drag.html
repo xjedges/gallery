@@ -4,6 +4,8 @@
 </head>
 <script type="text/javascript" src="js/debug2.0.js"></script>
 <script type="text/javascript" src="js/$.js"></script>
+<script type="text/javascript" src="js/JClass.js"></script>
+<script type="text/javascript" src="js/drag_custom.js"></script>
 <style type="text/css">
 #div1{width:20px; height:400px; background:#000; position: absolute;}
 #div2{width:20px; height:30px; background:#f00; position: absolute;}
@@ -15,14 +17,11 @@ window.onload=function(){
 var body=$("body")
 var div1=$("div",{id:"div1"})
 var div2=$("div",{id:"div2"})
-
 body.append(div1,div2)
-div2.drag({
+
+new Drag(div2,{
 	activeY:true,
 	limit:{obj:div1,magnet:15},
-	start:function(e){DD("start");},
-	move:function(e){DD(e.posX,e.posY);return true},
-	stop:function(e){DD("stop");return true}
 })
 
 }
